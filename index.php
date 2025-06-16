@@ -1,4 +1,14 @@
+<?php
+//https://www.youtube.com/watch?v=YB2UgIn2jQg
+session_start();
+
+// GENERATE RANDOM TAKEN (STRING)
+$_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+?>
 <!DOCTYPE html>
+
+<meta name="csrf-token" content="<?php echo $_SESSION['csrf_token']; ?>"> <!--necessary for CSRF-TOKENS-->
 
 <link rel="stylesheet" href="styles.css">
 <html lang="en">
@@ -210,7 +220,7 @@
 
 <!-- Signup Modal -->
 <div class="modal" id="signupModal">
-  <h3>Set Email</h3>
+  <h3>Create an acount</h3>
   <label>Create a Email:</label><br>
   <input type="email" id="signupEmail"><br>
   <label>Create a Password:</label><br>
@@ -300,6 +310,15 @@ const Security = {
     // Logout user by clearing JWT token cookie
     logout() {
         if (!Security.logintest()) {return;}
+        const formData = new FormData();
+        formData.append('token', Utils.getCookie('JWT_Token'));
+        CSRFUtils.addCSRFToken(formData); // Add CSRF protection
+        fetch('logout.php', {
+            method: 'POST',
+            body: formData
+        })
+
+
         Utils.setCookie('JWT_Token', '', -1);
         Utils.showMessage('You have been logged out.', 'info');
         UIManager.showScreen('home');
@@ -316,6 +335,7 @@ const Security = {
 
         const formData = new FormData();
         formData.append('token', Utils.getCookie('JWT_Token'));
+        CSRFUtils.addCSRFToken(formData); // Add CSRF protection
 
         fetch('delete_acount_proccess.php', {
             method: 'POST',
@@ -346,6 +366,7 @@ const Security = {
 
         const formData = new FormData();
         formData.append('email', email);
+        CSRFUtils.addCSRFToken(formData); // Add CSRF protection
 
         fetch('forgot_password_proccess.php', {
             method: 'POST',
@@ -379,6 +400,7 @@ const Security = {
         formData.append('email', email);
         formData.append('password', password);
         formData.append('code', code);
+        CSRFUtils.addCSRFToken(formData); // Add CSRF protection
 
         fetch('forgot_password.php', {
             method: 'POST',
@@ -410,6 +432,7 @@ const Security = {
         const formData = new FormData();
         formData.append('password', newPassword);
         formData.append('token', Utils.getCookie('JWT_Token'));
+        CSRFUtils.addCSRFToken(formData); // Add CSRF protection
 
         fetch('set_password.php', {
             method: 'POST',
@@ -441,6 +464,7 @@ const Security = {
         const formData = new FormData();
         formData.append('email', newEmail);
         formData.append('token', Utils.getCookie('JWT_Token'));
+        CSRFUtils.addCSRFToken(formData); // Add CSRF protection
 
 
         fetch('set_email.php', {
@@ -462,6 +486,31 @@ const Security = {
             Utils.showMessage('Error setting email.', 'error');
             console.error('Set email error:', error);
         });
+    }
+};
+
+// ============================================================================
+// CSRF UTILITY FUNCTIONS
+// ============================================================================
+const CSRFUtils = {
+    // Get CSRF token from a meta tag or global variable
+    getCSRFToken() {
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        if (metaTag) {
+            return metaTag.getAttribute('content');
+        }
+        
+        // Fallback to global variable if meta tag not found
+        return window.CSRF_TOKEN || '';
+    },
+
+    // Add CSRF token to FormData
+    addCSRFToken(formData) {
+        const token = this.getCSRFToken();
+        if (token) {
+            formData.append('csrf_token', token);
+        }
+        return formData;
     }
 };
 
@@ -552,6 +601,7 @@ const Auth = {
         const formData = new FormData();
         formData.append('email', email);
         formData.append('password', password);
+        CSRFUtils.addCSRFToken(formData); // Add CSRF protection
 
         try {
             const response = await fetch('login_process.php', {
@@ -592,6 +642,7 @@ const Auth = {
         const formData = new FormData();
         formData.append('email', email);
         formData.append('password', password);
+        CSRFUtils.addCSRFToken(formData); // Add CSRF protection
 
         try {
             const response = await fetch('signup_process.php', {
@@ -1203,6 +1254,7 @@ searchPantry() {
         const formData = new FormData();
         formData.append('token', token);
         formData.append('action', action);
+        CSRFUtils.addCSRFToken(formData); // Add CSRF protection
 
         if (action !== 'read') {
             if (!items || items.length === 0) {

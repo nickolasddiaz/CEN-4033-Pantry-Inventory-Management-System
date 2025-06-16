@@ -110,6 +110,13 @@ function revokeJWT($pdo, $JWTKey) {
     }
 }
 
+function checkCRSFkey() {
+    session_start();
+    error_log($_POST['csrf_token'] . " " . $_POST['csrf_token']);
+    // Check if CSRF token is set in session and matches the one in POST request
+    return (isset($_SESSION['csrf_token']) && isset($_POST['csrf_token']) && $_SESSION['csrf_token'] === $_POST['csrf_token']);
+}
+
 function generateCode() { 
     // Works like a random string generator can be used for verification codes or salts
     return bin2hex(random_bytes(8));

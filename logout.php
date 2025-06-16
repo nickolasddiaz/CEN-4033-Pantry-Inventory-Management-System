@@ -2,7 +2,7 @@
 require_once 'config.php'; // Include database configuration and functions
 
 try{
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && checkCRSFkey()) {
         if (isset($_POST['token']) && !empty($_POST['token'])){
             $token = $_POST['token'];
             $id = verifyJWT($pdo, $token);

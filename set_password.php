@@ -1,7 +1,7 @@
 <?php
 require_once 'config.php'; // Include database configuration and functions
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && checkCRSFkey()) {
     if (isset($_POST['token']) && !empty($_POST['token']) &&
         isset($_POST['password']) && !empty($_POST['password'])) {
 
