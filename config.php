@@ -5,16 +5,20 @@ require __DIR__ . '/vendor/autoload.php'; // Autoload files using Composer
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
-define('SECRET_KEY', 'your_secret_key'); // Ensure the secret key is a valid string
 require 'vendor/autoload.php';
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
 // Database connection
-$DB_HOST = 'localhost'; //getenv('DB_HOST');
-$DB_USER = 'root'; //getenv('DB_USER'); 
-$DB_PASSWORD = ''; //getenv('DB_PASSWORD'); 
-$DB_NAME = 'pantry_db'; //getenv('DB_NAME');
+$DB_HOST = $_ENV['DB_HOST']; // or $_ENV['DB_HOST'] if you rename it
+$DB_USER = $_ENV['DB_USER']; 
+$DB_PASSWORD = $_ENV['DB_PASSWORD']; 
+$DB_NAME = $_ENV['DB_NAME'];
+$JWTKey = $_ENV['JWT_KEY']; // JWT key for encoding and decoding tokens
+
+define('SECRET_KEY', $JWTKey); // Ensure the secret key is a valid string
+
+
 
 header('Content-Type: application/json');
 
@@ -55,6 +59,7 @@ try {
     ]);
     exit;
 }
+
 
 $response = [ // Initialize a generalised response array for the entire application
     'success' => false,
