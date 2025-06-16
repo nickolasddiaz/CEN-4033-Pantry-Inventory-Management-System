@@ -1,0 +1,11 @@
+# Ignore vendor directory
+/vendor/
+
+# Ignore XAMPP specific files and directories
+/xampp/
+
+# Ignore environment files
+.env
+
+# Ignore error log files
+error.log
