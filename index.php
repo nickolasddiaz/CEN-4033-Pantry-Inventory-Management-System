@@ -192,24 +192,16 @@
   <h3>Set New Email</h3>
   <label>Enter your new Email:</label><br>
   <input type="email" id="loginEmailSetNew"><br>
-  <label>Enter your old Email:</label><br>
-  <input type="email" id="loginEmailSetOld"><br>
-  <label>Enter your Password:</label><br>
-  <input type="password" id="loginPasswordSet"><br><br>
-  <button onclick="setemail()">Go</button>
+  <button onclick="Security.setemail()">Go</button>
 </div>
 
 <!-- Set Password Modal -->
 <div class="overlay" onclick="closeModal()"></div>
 <div class="modal" id="PasswordModalSet">
   <h3>Set New Password</h3>
-  <label>Enter your Email:</label><br>
-  <input type="email" id="loginEmailSetPass"><br>
   <label>Enter your new Password:</label><br>
   <input type="password" id="loginPasswordSetPassOld"><br><br>
-  <label>Enter your old Password:</label><br>
-  <input type="password" id="loginPasswordSetPassOld"><br><br>
-  <button onclick="setPassword()">Go</button>
+  <button onclick="Security.setPassword()">Go</button>
 </div>
 
 <!-- Signup Modal -->
@@ -400,6 +392,71 @@ const Security = {
         .catch(error => {
             Utils.showMessage('Error resetting password.', 'error');
             console.error('Forgot password confirm error:', error);
+        });
+    },
+
+    setPassword(){
+        const newPassword = document.getElementById('loginPasswordSetPassOld').value;
+
+        if (!newPassword) {
+            Utils.showMessage('Please fill in all fields correctly.', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('password', newPassword);
+        formData.append('token', Utils.getCookie('JWT_Token'));
+
+        fetch('set_password.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                Utils.showMessage('Password changed successfully.', 'success');
+                UIManager.closeModal();
+                Security.logout();
+                UIManager.showScreen('home');
+            } else {
+                Utils.showMessage(`Error: ${result.message}`, 'error');
+            }
+        })
+        .catch(error => {
+            Utils.showMessage('Error changing password.', 'error');
+            console.error('Set password error:', error);
+        });
+
+    },
+    setemail(){
+        const newEmail = document.getElementById('loginEmailSetNew').value;
+        if (!Utils.isValidEmail(newEmail)) {
+            Utils.showMessage('Please enter a valid email address.', 'error');
+            return;
+        }
+        const formData = new FormData();
+        formData.append('email', newEmail);
+        formData.append('token', Utils.getCookie('JWT_Token'));
+
+
+        fetch('set_email.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                Utils.showMessage('Email set successfully.', 'success');
+                UIManager.closeModal();
+                Security.logout();
+                UIManager.showScreen('home');
+            } else {
+                Utils.showMessage(`Error: ${result.message}`, 'error');
+            }
+        })
+        .catch(error => {
+            Utils.showMessage('Error setting email.', 'error');
+            console.error('Set email error:', error);
         });
     }
 };
