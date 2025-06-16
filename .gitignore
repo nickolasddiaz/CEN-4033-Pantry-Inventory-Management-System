@@ -9,3 +9,6 @@
 
 # Ignore error log files
 error.log
+
+# Ignore composer file
+composer.phar
