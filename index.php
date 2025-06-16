@@ -110,6 +110,7 @@
     <button onclick="openModal('loginModal')">Login</button>
     <button onclick="openModal('signupModal')">Sign Up</button>
     <button onclick="openModal('forgotPassword')">Forgot Password</button>
+    <button onclick="openModal('forgotPasswordConfirm')">Continue to Forgot Password</button>
   </nav>
 </header>
 
@@ -169,7 +170,20 @@
   <h3>Forgot Email</h3>
   <label>Enter your Email:</label><br>
   <input type="email" id="loginEmailForgot"><br>
-  <button onclick="ForgotPassword()">Go</button>
+  <button onclick="Security.forgotpassword()">Go</button>
+</div>
+
+<!-- Forgot password confirm Modal -->
+<div class="overlay" onclick="closeModal()"></div>
+<div class="modal" id="forgotPasswordConfirm">
+  <h3>Forgot Email</h3>
+  <label>Enter your Email:</label><br>
+  <input type="email" id="loginEmailForgotConfirm"><br>
+  <label>Enter your New Password:</label><br>
+  <input type="text" id="loginpasswordForgotConfirm"><br>
+  <label>Enter your Code:</label><br>
+  <input type="text" id="logincodeForgotConfirm"><br>
+  <button onclick="Security.forgotpasswordconfirm()">Go</button>
 </div>
 
 <!-- Set Email Modal -->
@@ -324,6 +338,68 @@ const Security = {
             Utils.showMessage('Account deleted successfully.', 'success');
             Security.logout();
             console.error('Delete account error:', error);
+        });
+    },
+
+    forgotpassword(){
+        const email = document.getElementById('loginEmailForgot').value;
+        if (!Utils.isValidEmail(email)) {
+            Utils.showMessage('Please enter a valid email address.', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('email', email);
+
+        fetch('forgot_password_proccess.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                Utils.showMessage(`Verification code sent to your email. code = ` + result.verification_code + `', 'success`);
+                UIManager.closeModal();
+            } else {
+                Utils.showMessage(`Error: ${result.message}`, 'error');
+            }
+        })
+        .catch(error => {
+            Utils.showMessage('Error sending verification code.', 'error');
+            console.error('Forgot password error:', error);
+        });
+    },
+    forgotpasswordconfirm(){
+        const email = document.getElementById('loginEmailForgotConfirm').value;
+        const password = document.getElementById('loginpasswordForgotConfirm').value;
+        const code = document.getElementById('logincodeForgotConfirm').value;
+
+        if (!Utils.isValidEmail(email) || !password || !code) {
+            Utils.showMessage('Please fill in all fields correctly.', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('email', email);
+        formData.append('password', password);
+        formData.append('code', code);
+
+        fetch('forgot_password.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                Utils.showMessage('Password reset successful.', 'success');
+                UIManager.closeModal();
+            } else {
+                Utils.showMessage(`Error: ${result.message}`, 'error');
+            }
+        })
+        .catch(error => {
+            Utils.showMessage('Error resetting password.', 'error');
+            console.error('Forgot password confirm error:', error);
         });
     }
 };

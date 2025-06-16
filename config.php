@@ -97,7 +97,7 @@ function createJWT($email) {
 
 function generateCode() { 
     // Works like a random string generator can be used for verification codes or salts
-    return bin2hex(random_bytes(16));
+    return bin2hex(random_bytes(8));
 }
 
 function hashPassword($password, $salt) {
