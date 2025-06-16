@@ -66,12 +66,13 @@ function verifyJWT($pdo, $JWTKey){
         // Fixed JWT decode call - use Key object for newer versions of firebase/jwt
         $token = JWT::decode($JWTKey, new Key(SECRET_KEY, 'HS256'));
 
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = :email AND is_verified = 1");
+        $stmt = $pdo->prepare("SELECT id, `revoke` FROM users WHERE email = :email AND is_verified = 1");
         $stmt->execute([
             'email' => $token->email,
         ]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($user) {
+
+        if ($user && (int)$user['revoke'] < (int)$token->iat) { // Check if user exists and is not revoked
             return $user['id']; // Return user ID if verification is successful
         } else {
             error_log("JWT verification query executed for email: " . $token->email);
@@ -93,6 +94,20 @@ function createJWT($email) {
     ];
     
     return JWT::encode($payload, SECRET_KEY, 'HS256');
+}
+
+function revokeJWT($pdo, $JWTKey) {
+    $decoded = JWT::decode($JWTKey, new Key(SECRET_KEY, 'HS256'));
+    $email = $decoded->email;
+    try {
+        $stmt = $pdo->prepare("UPDATE users SET revoke = :revoke WHERE email = :email");
+        $stmt->execute([
+            'revoke' => time(), // Set the revoke time to current time
+            'email' => $email
+        ]);
+    } catch (PDOException $e) {
+        error_log("Error revoking JWT: " . $e->getMessage());
+    }
 }
 
 function generateCode() { 

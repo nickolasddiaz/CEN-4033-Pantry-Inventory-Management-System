@@ -68,7 +68,8 @@ CREATE TABLE `users` (
   `in_app_notifications` tinyint(1) DEFAULT 1,
   `email_notifications` tinyint(1) DEFAULT 1,
   `is_verified` boolean DEFAULT 1,
-  `verification_code` varchar(255) NOT NULL
+  `verification_code` varchar(255) NOT NULL,
+  `revoke` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --

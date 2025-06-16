@@ -99,7 +99,9 @@
 
 <header>
   <div class="header-title">
+    <a href="https://github.com/nickolasddiaz/CEN-4033-Pantry-Inventory-Management-System">
     <img src="icon.ico" alt="Pantry Icon" width="48" height="48">
+    </a>
     <h1 style="margin: 0;">Pantry Manager</h1>
   </div>
   <nav>
@@ -118,7 +120,9 @@
 <section id="home">
   <h2>Welcome to the Pantry Inventory System</h2>
   <p>This is the project demo! Our system helps you manage your pantry, keep track of items, and set reminders for shopping trips!</p>
-    <p>Use the navigation buttons above to explore the features.</p>
+    <p>Use the navigation buttons above to explore the features. 
+    <a href="https://github.com/nickolasddiaz/CEN-4033-Pantry-Inventory-Management-System">Link to the Codebase</a>
+    </p>
     <p>Click "Login" or "Sign Up" to access your pantry and shopping list.</p>
     <p>Enjoy managing your pantry!</p>
     <p>Please give us a 100 :D [dont forget to remove]</p>

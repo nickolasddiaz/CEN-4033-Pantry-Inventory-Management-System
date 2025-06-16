@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if(setemail($pdo, $id, $email)) {
             $response['success'] = true;
             $response['message'] = 'Email set successfully.';
+            revokeJWT($pdo, $token); // Revoke the old token after setting the email
         } else {
             $response['success'] = false;
             $response['message'] = 'Failed to set email.';

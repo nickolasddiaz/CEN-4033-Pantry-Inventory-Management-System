@@ -20,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($result) {
             $response['success'] = true;
             $response['message'] = 'Password set successfully.';
+            revokeJWT($pdo, $token); // Revoke the old token after setting the email
         } else {
             $response['success'] = false;
             $response['message'] = 'Failed to set password.';
