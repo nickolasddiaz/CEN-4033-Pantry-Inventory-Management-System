@@ -21,7 +21,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && checkCRSFkey()) {
             echo json_encode($response);
             exit;
         }
-        if(setemail($pdo, $id, $email)) {
+
+        // Generate a verification code
+        $verification_code = generateCode(); // Generate a secure random verification
+        $message = "http://localhost/verify_email_client.php?email=" . $email . "&code=" . $verification_code; // Verification link
+        if($SEND_EMAIL && !send_email($email, $message)) {
+            $response['success'] = false;
+            $response['message'] = 'Failed to send verification email.';
+            echo json_encode($response);
+            exit;
+        }
+
+        if(setemail($pdo, $id, $email, $verification_code, $SEND_EMAIL)) {
             $response['success'] = true;
             $response['message'] = 'Email set successfully.';
             revokeJWT($pdo, $token); // Revoke the old token after setting the email
@@ -54,15 +65,14 @@ function checkifemailexists($pdo, $email) {
     }
 }
 
-
-
-function setemail($pdo, $id, $email) {
+function setemail($pdo, $id, $email, $verification_code, $is_verified = 0) {
     try {
-        $stmt = $pdo->prepare("UPDATE users SET email = :email, is_verified = :is_verified WHERE id = :id");
+        $stmt = $pdo->prepare("UPDATE users SET email = :email, is_verified = :is_verified, verification_code = :verification_code WHERE id = :id");
         $stmt->execute([
             'email' => $email,
             'id' => $id,
-            'is_verified' => 1 // Set is_verified to true just for now
+            'is_verified' => !$is_verified, 
+            'verification_code' => $verification_code 
         ]);
         return true; // Email set successfully
     } catch (PDOException $e) {

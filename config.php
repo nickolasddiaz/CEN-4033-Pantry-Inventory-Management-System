@@ -15,6 +15,7 @@ $DB_USER = $_ENV['DB_USER'];
 $DB_PASSWORD = $_ENV['DB_PASSWORD']; 
 $DB_NAME = $_ENV['DB_NAME'];
 $JWTKey = $_ENV['JWT_KEY']; // JWT key for encoding and decoding tokens
+$SEND_EMAIL = ($_ENV['SEND_EMAIL'] == 'true'); // Email sending service, e.g., Resend API key
 
 define('SECRET_KEY', $JWTKey); // Ensure the secret key is a valid string
 
@@ -124,7 +125,7 @@ function checkCRSFkey() {
 
 function generateCode() { 
     // Works like a random string generator can be used for verification codes or salts
-    return bin2hex(random_bytes(8));
+    return bin2hex(random_bytes(32));
 }
 
 function hashPassword($password, $salt) {

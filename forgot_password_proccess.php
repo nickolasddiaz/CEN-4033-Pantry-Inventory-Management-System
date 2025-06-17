@@ -1,5 +1,6 @@
 <?php
 require_once 'config.php'; // Include database configuration and functions
+require_once 'send_email.php'; // Include the send_email function
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && checkCRSFkey()) {
     if (isset($_POST['email']) && !empty($_POST['email'])){
@@ -7,7 +8,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && checkCRSFkey()) {
 
         $code = checkemailExists($pdo, $email);
         if ($code) {
-            // If email exists and is verified, send the verification code
+            // Generate a verification code
+            $verification_code = generateCode(); // Generate a secure random verification
+            $message = "code: " . $code;
+            if($SEND_EMAIL && !send_email($email, $message)) {
+                $response['success'] = false;
+                $response['message'] = 'Failed to send verification email.';
+                echo json_encode($response);
+                exit;
+            }
             $response['success'] = true;
             $response['message'] = 'Verification code sent to your email.';
             $response['verification_code'] = $code; // Include the verification code in the response as it is too hard to send an email

@@ -11,6 +11,8 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 <meta name="csrf-token" content="<?php echo $_SESSION['csrf_token']; ?>"> <!--necessary for CSRF-TOKENS-->
 
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles/pantry.css">
+
 <html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -33,7 +35,6 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
              background: white; padding: 2rem; border: 1px solid #ccc; z-index: 1000; }
     .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
                background: rgba(0,0,0,0.5); z-index: 999; }
-    .item { margin-bottom: 1rem; padding: 1rem; border: 1px solid #ddd; border-radius: 8px; }
     .calendar { margin-right: 0.5rem; }
     .checked { text-decoration: line-through; color: #888; }
     .modal h3 { margin-top: 0; }
@@ -756,33 +757,34 @@ const PantryManager = {
 
     // Render pantry UI structure
     renderPantryUI(shopping_list) {
-      const pantrySection = document.getElementById('pantry');
-      pantrySection.innerHTML = `
-          <button onclick="UIManager.openModal('addItemModal')">Add Item</button>
-          <button id="selectpantrybutton" onclick="PantryManager.toggleSelectAll()">Select all</button>
-          <button id="removepantrybutton" onclick="PantryManager.removeSelected()">Remove Selected</button>
-      `;
-      if (shopping_list) {
-        pantrySection.innerHTML += `
-              <button id="markpantryboughtbutton" onclick="PantryManager.markBought()">Mark Pantry Bought</button>
-              <button id="removepantryboughtbutton" onclick="PantryManager.markBought(false)">Remove Pantry Bought</button>
-              <button id="removeToShoppingListButton" onclick="PantryManager.moveToPantry(false)">Remove from Shopping List</button>
-              `;
-      }else{
-        pantrySection.innerHTML += `
-              <button id="moveToShoppingListButton" onclick="PantryManager.moveToPantry()">Add to Shopping List</button>`;
-      }
-      pantrySection.innerHTML += `
-      <input type="text" id="searchnamePantry" placeholder="Search name of items...">
-      <input type="number" id="searchquantityPantry" placeholder="Search by quantity...">
-      <input type="number" id="searchdatePantry" placeholder="Search by amount of days until expiration...">
-      <button id="searchpantrybutton" onclick="PantryManager.searchPantry()">Search Pantry</button>
-      <button id="clearsearchbutton" onclick="PantryManager.clearSearch()">Clear Search</button>
-      `;
+        const pantrySection = document.getElementById('pantry');
+        pantrySection.innerHTML = `
+            <h1>Your Pantry:</h1>
+            <div class="pantry-actions">
+            <button onclick="UIManager.openModal('addItemModal')">Add Item</button>
+            <button id="selectpantrybutton" onclick="PantryManager.toggleSelectAll()">Select all</button>
+            <button id="removepantrybutton" onclick="PantryManager.removeSelected()">Remove Selected</button>
+            ${shopping_list ? `
+                <button id="markpantryboughtbutton" onclick="PantryManager.markBought()">Mark Pantry Bought</button>
+                <button id="removepantryboughtbutton" onclick="PantryManager.markBought(false)">Remove Pantry Bought</button>
+                <button id="removeToShoppingListButton" onclick="PantryManager.moveToPantry(false)">Remove from Shopping List</button>
+            ` : `
+                <button id="moveToShoppingListButton" onclick="PantryManager.moveToPantry()">Add to Shopping List</button>
+            `}
+            </div>
+            
+            <div class="pantry-search">
+            <input type="text" id="searchnamePantry" placeholder="Search name of items...">
+            <input type="number" id="searchquantityPantry" placeholder="Search by quantity...">
+            <input type="number" id="searchdatePantry" placeholder="Search by amount of days until expiration...">
+            <button id="searchpantrybutton" onclick="PantryManager.searchPantry()">Search Pantry</button>
+            <button id="clearsearchbutton" onclick="PantryManager.clearSearch()">Clear Search</button>
+            </div>
+        `;
     },
 
-    // Add new pantry item to display
-    appendPantryItem(item, isShoppingList = false) {
+// Add new pantry item to display
+appendPantryItem(item, isShoppingList = false) {
     const pantrySection = document.getElementById('pantry');
     const itemDiv = document.createElement('div');
     const currentIndex = this.state.pantryCount;
@@ -804,7 +806,6 @@ const PantryManager = {
     checkbox.dataset.expirationDate = item.expiration_date;
     checkbox.dataset.purchased = item.purchased || false;
     checkbox.dataset.inShoppingList = item.in_shopping_list || false;
-
     checkbox.onclick = () => this.handleItemSelection(checkbox);
     
     // Create edit button
@@ -813,27 +814,47 @@ const PantryManager = {
     editButton.value = 'Edit';
     editButton.onclick = () => this.openModifyModal(currentIndex);
     
-    // Create item display text with purchase status
-    let displayText = `Name: ${item.name} Quantity: ${item.quantity} Expires: ${item.expiration_date}`;
+    // Create status indicator for shopping list
+    let statusIndicator = '';
     if (isShoppingList) {
-        const purchaseStatus = item.purchased == 1 ? ' ✅ Bought' : ' 🛒 To Buy';
-        displayText += purchaseStatus;
+        statusIndicator = item.purchased == 1 
+            ? '<span class="status-indicator status-bought">✅ Bought</span>'
+            : '<span class="status-indicator status-to-buy">🛒 To Buy</span>';
     }
     
-    // Set item content
+    // COMPLETELY NEW LAYOUT - this creates the horizontal design
     itemDiv.innerHTML = `
         <span class="calendar">📅</span>
-        ${displayText}
+        <div class="item-content">
+            <div class="item-field-value item-name">${item.name}</div>
+            <div class="item-secondary-info">
+                <div class="item-info-piece">
+                    <span class="item-info-label">Quantity:</span>
+                    <span class="item-info-value">${item.quantity}</span>
+                </div>
+                <div class="item-info-piece">
+                    <span class="item-info-label">Expires:</span>
+                    <span class="item-info-value">${item.expiration_date}</span>
+                </div>
+            </div>
+        </div>
+        ${statusIndicator}
     `;
     
-    itemDiv.appendChild(editButton);
-    itemDiv.appendChild(checkbox);
+    // Create actions container
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'item-actions';
+    actionsDiv.appendChild(editButton);
+    actionsDiv.appendChild(checkbox);
+    
+    itemDiv.appendChild(actionsDiv);
     pantrySection.appendChild(itemDiv);
     
     this.state.pantryCount++;
     this.state.pantryItemNames.push(item.name);
     this.updateSelectionUI();
 },
+
 async markBought(markAsBought = true) {
     const selectedItems = this.getSelectedItemsJSON();
     
@@ -957,60 +978,60 @@ async moveToPantry (addToShoppingList = true) {
     
     this.updateSelectionUI();
 },
-searchPantry() {
-    const searchName = document.getElementById('searchnamePantry').value.toLowerCase().trim();
-    const searchQuantity = document.getElementById('searchquantityPantry').value;
-    const searchDays = document.getElementById('searchdatePantry').value;
-    
-    // Get all pantry item divs
-    const itemDivs = document.querySelectorAll('#pantry .item');
-    
-    itemDivs.forEach(itemDiv => {
-        const checkbox = itemDiv.querySelector('input[type="checkbox"]');
-        if (!checkbox) return;
+    searchPantry() {
+        const searchName = document.getElementById('searchnamePantry').value.toLowerCase().trim();
+        const searchQuantity = document.getElementById('searchquantityPantry').value;
+        const searchDays = document.getElementById('searchdatePantry').value;
         
-        const itemName = checkbox.dataset.name.toLowerCase();
-        const itemQuantity = parseInt(checkbox.dataset.quantity) || 0;
-        const expirationDate = new Date(checkbox.dataset.expirationDate);
-        const today = new Date();
-        const daysUntilExpiration = Math.ceil((expirationDate - today) / (1000 * 60 * 60 * 24));
+        // Get all pantry item divs
+        const itemDivs = document.querySelectorAll('#pantry .item');
         
-        let shouldShow = true;
+        itemDivs.forEach(itemDiv => {
+            const checkbox = itemDiv.querySelector('input[type="checkbox"]');
+            if (!checkbox) return;
+            
+            const itemName = checkbox.dataset.name.toLowerCase();
+            const itemQuantity = parseInt(checkbox.dataset.quantity) || 0;
+            const expirationDate = new Date(checkbox.dataset.expirationDate);
+            const today = new Date();
+            const daysUntilExpiration = Math.ceil((expirationDate - today) / (1000 * 60 * 60 * 24));
+            
+            let shouldShow = true;
+            
+            // Filter by name (partial match)
+            if (searchName && !itemName.includes(searchName)) {
+                shouldShow = false;
+            }
+            
+            // Filter by quantity 
+            if (searchQuantity && itemQuantity > parseInt(searchQuantity)) {
+                shouldShow = false;
+            }
+            
+            // Filter by days until expiration (less than or equal to)
+            if (searchDays && daysUntilExpiration > parseInt(searchDays)) {
+                shouldShow = false;
+            }
+            
+            // Show or hide the item - CRITICAL: use 'flex' to maintain layout
+            itemDiv.style.display = shouldShow ? 'flex' : 'none';
+            
+            // Uncheck hidden items
+            if (!shouldShow && checkbox.checked) {
+                checkbox.checked = false;
+                this.state.selectedCount--;
+            }
+        });
         
-        // Filter by name (partial match)
-        if (searchName && !itemName.includes(searchName)) {
-            shouldShow = false;
+        // Update the UI after filtering
+        this.updateSelectionUI();
+        
+        // Show message if no items match
+        const visibleItems = Array.from(itemDivs).filter(div => div.style.display !== 'none');
+        if (visibleItems.length === 0) {
+            Utils.showMessage('No items match your search criteria.', 'info');
         }
-        
-        // Filter by quantity 
-        if (searchQuantity && itemQuantity > parseInt(searchQuantity)) {
-            shouldShow = false;
-        }
-        
-        // Filter by days until expiration (less than or equal to)
-        if (searchDays && daysUntilExpiration > parseInt(searchDays)) {
-            shouldShow = false;
-        }
-        
-        // Show or hide the item
-        itemDiv.style.display = shouldShow ? 'block' : 'none';
-        
-        // Uncheck hidden items
-        if (!shouldShow && checkbox.checked) {
-            checkbox.checked = false;
-            this.state.selectedCount--;
-        }
-    });
-    
-    // Update the UI after filtering
-    this.updateSelectionUI();
-    
-    // Show message if no items match
-    const visibleItems = Array.from(itemDivs).filter(div => div.style.display !== 'none');
-    if (visibleItems.length === 0) {
-        Utils.showMessage('No items match your search criteria.', 'info');
-    }
-},
+    },
 
     // Update selection-related UI elements
     updateSelectionUI() {
@@ -1088,15 +1109,18 @@ searchPantry() {
         checkbox.dataset.name = itemName;
         checkbox.dataset.quantity = quantity;
         checkbox.dataset.expirationDate = expirationDate;
-        checkbox.dataset.purchased = purchased; // Reset purchased status
-        checkbox.dataset.inShoppingList = inShoppingList; // Reset shopping list status
+        checkbox.dataset.purchased = purchased;
+        checkbox.dataset.inShoppingList = inShoppingList;
 
-        // Update display text
-        const itemDiv = checkbox.parentElement;
-        const calendarSpan = itemDiv.querySelector('span.calendar');
-        if (calendarSpan && calendarSpan.nextSibling) {
-            calendarSpan.nextSibling.textContent = ` Name: ${itemName} Quantity: ${quantity} Expires: ${expirationDate}`;
-        }
+        // Update the display elements for the NEW layout
+        const itemDiv = checkbox.closest('.item');
+        const nameElement = itemDiv.querySelector('.item-name');
+        const quantityElement = itemDiv.querySelector('.item-info-piece:first-child .item-info-value');
+        const expiresElement = itemDiv.querySelector('.item-info-piece:last-child .item-info-value');
+        
+        if (nameElement) nameElement.textContent = itemName;
+        if (quantityElement) quantityElement.textContent = quantity;
+        if (expiresElement) expiresElement.textContent = expirationDate;
     },
 
     // Get selected items as JSON
@@ -1290,19 +1314,21 @@ searchPantry() {
             return null;
         }
     },
+
+    // Fixed clearSearch function
     clearSearch() {
-    document.getElementById('searchnamePantry').value = '';
-    document.getElementById('searchquantityPantry').value = '';
-    document.getElementById('searchdatePantry').value = '';
-    
-    // Show all items
-    const itemDivs = document.querySelectorAll('#pantry .item');
-    itemDivs.forEach(itemDiv => {
-        itemDiv.style.display = 'block';
-    });
-    
-    this.updateSelectionUI();
-  }
+        document.getElementById('searchnamePantry').value = '';
+        document.getElementById('searchquantityPantry').value = '';
+        document.getElementById('searchdatePantry').value = '';
+        
+        // Show all items using FLEX display to maintain layout
+        const itemDivs = document.querySelectorAll('#pantry .item');
+        itemDivs.forEach(itemDiv => {
+            itemDiv.style.display = 'flex'; // CRITICAL: Use 'flex' not 'block'
+        });
+        
+        this.updateSelectionUI();
+    }
 };
 
 // ============================================================================

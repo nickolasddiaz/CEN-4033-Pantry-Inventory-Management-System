@@ -1,5 +1,6 @@
 <?php
 require_once 'config.php'; // Include database configuration and functions
+require_once 'send_email.php'; // Include email sending function
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && checkCRSFkey()) {
     // Check if email and password are set and not empty
@@ -30,7 +31,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && checkCRSFkey()) {
 
             try {
                 // Create the new user
-                $result = createUser($pdo, $email, $hashedPassword, $salt);
+                $code = generateCode(); // Generate a verification code
+                $message = "http://localhost/verify_email_client.php?email=" . $email . "&code=" . $code; // Verification link
+
+                if ($SEND_EMAIL && !send_email($email, $message)) {
+                    $response['success'] = false;
+                    $response['message'] = 'Failed to send verification email.';
+                    echo json_encode($response);
+                    exit;
+                }
+
+
+                $result = createUser($pdo, $email, $hashedPassword, $salt, $code, $SEND_EMAIL);
                 if (!$result) {
                     $response['success'] = false;
                     $response['message'] = 'Registration failed. Please try again.';
@@ -91,21 +103,17 @@ function emailExistsSignUp($pdo, $email) {
     }
 }
 
-function createUser($pdo, $email, $hashedPassword, $salt) {
+function createUser($pdo, $email, $hashedPassword, $salt, $code, $is_verified = 0) {
     try {
-        $code = generateCode(); // Generate a verification code
-        // Begin transaction
-
-        $stmt = $pdo->prepare("REPLACE INTO users (email, password_hash, role, salt, verification_code) VALUES (:email, :hashedPassword, 'user', :salt, :verification_code)");
+        $stmt = $pdo->prepare("REPLACE INTO users (email, password_hash, role, salt, verification_code, is_verified) VALUES (:email, :hashedPassword, 'user', :salt, :verification_code, :is_verified)");
         return $stmt->execute([
             'email' => $email,
             'hashedPassword' => $hashedPassword,
             'salt' => $salt,
-            'verification_code' => $code
+            'verification_code' => $code,
+            'is_verified' => !$is_verified
         ]);
-        // Commit the transaction
     } catch (PDOException $e) {
-        // Rollback the transaction in case of error
         error_log("Error in createUser: " . $e->getMessage());
         return false;
     }
