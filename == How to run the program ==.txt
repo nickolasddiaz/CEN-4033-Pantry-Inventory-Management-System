@@ -1,0 +1,21 @@
+Instructions to Run the Program:
+
+Install XAMPP:
+Download and run the XAMPP installer.
+
+Start Servers:
+Open the XAMPP Control Panel.
+Click "Start" for both Apache and MySQL.
+
+Create Database:
+Go to http://localhost/phpmyadmin in your web browser.
+Create a new database and name it pantry_db.
+
+Import Database File:
+Select the pantry_db database.
+Go to the "Import" tab and upload the provided database file.
+
+Install Composer Dependencies:
+Open the Command Prompt (CMD).
+Navigate to the project directory with the command: cd C:\xampp\htdocs\
+Run the command: composer install
